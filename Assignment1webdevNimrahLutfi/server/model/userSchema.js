@@ -1,9 +1,9 @@
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
-const mongooose = require('mongoose');
+const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
-const userSchema = new mongooose.Schema({
+const userSchema = new mongoose.Schema({
    name: {
     type: String,
     required: true
@@ -28,7 +28,12 @@ const userSchema = new mongooose.Schema({
     type: String,
     required: true
    },
-   
+   // Reference to skills
+   skills: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Skill', // Refers to the 'Skill' model
+  }],
+
 })
 
 //we are hashing the password
@@ -57,6 +62,6 @@ userSchema.methods.generateAuthToken = async function(){
      console.log(err);
    }
 }
-const User = mongooose.model('USER', userSchema);
+const User = mongoose.model('USER', userSchema);
 
 module.exports = User;

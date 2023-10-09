@@ -1,5 +1,7 @@
 const bcrypt = require('bcrypt');
 const User = require('../model/userSchema.js');
+const mongoose = require('mongoose'); // Adding this line to import mongoose
+
 
 //CReadUD
 async function getUsers(req, res, next){
@@ -23,6 +25,12 @@ async function register(req, res) {
 
         if (!name || !email || !phone || !work || !password || !cpassword) {
             return res.status(422).json({ error: "Please fill the fields properly" });
+        }
+
+        // Check if the email format is valid (as alijone mentioned in viva)
+        const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
+        if (!email.match(emailRegex)) {
+            return res.status(422).json({ error: "Invalid email format" });
         }
 
         // Check if the user already exists by email
@@ -103,7 +111,48 @@ async function signin(req, res){
         console.log(err);
     }
 }
+
+// Create a new user with skills
+const createUser = async (req, res) => {
+    const { name, email, phone,work,password,cpassword,skills } = req.body;
+
+    try {
+        const newUser = new User({
+            name,
+            email,
+            skills,
+            phone,work,password,cpassword // Just use the provided skills array
+        });
+
+        const savedUser = await newUser.save();
+        res.status(201).json(savedUser);
+    } catch (error) {
+        console.error('Error creating user:', error);
+        res.status(500).json({ error: 'Error creating user' });
+    }
+};
+
+
+
+// Retrieve a user with populated skills
+const getUserWithSkills = async (req, res) => {
+    const userId = req.params.userId;
+
+    try {
+        const user = await User.findById(userId).populate('skills').exec();
+
+        if (!user) {
+            res.status(404).json({ error: 'User not found' });
+        } else {
+            res.status(200).json(user);
+        }
+    } catch (error) {
+        console.error('Error fetching user:', error);
+        res.status(500).json({ error: 'Error fetching user' });
+    }
+};
+
 module.exports = {
-    getUsers, register, update, deleteUser, signin
+    getUsers, register, update, deleteUser, signin, createUser, getUserWithSkills
 }
 
